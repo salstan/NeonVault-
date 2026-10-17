@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeonVault | Interactive VIP Loyalty Hub & Multiplier Arena</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            vault: {
+              bg: '#090712',
+              card: '#120E24',
+              gold: '#FFB800',
+              purple: '#6366F1',
+              cyan: '#00F0FF',
+              emerald: '#10B981'
+            }
+          },
+          fontFamily: {
+            display: ['Orbitron', 'sans-serif'],
+            sans: ['Rajdhani', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #090712;
+      color: #ffffff;
+      font-family: 'Rajdhani', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Floating & Hover Shake Animations */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateY(-4px) rotate(0deg); }
+      25% { transform: translateY(-4px) rotate(-4deg) scale(1.04); }
+      50% { transform: translateY(-4px) rotate(4deg) scale(1.04); }
+      75% { transform: translateY(-4px) rotate(-4deg) scale(1.04); }
+    }
+
+    @keyframes chestOpenShake {
+      0% { transform: scale(1) rotate(0deg); }
+      20% { transform: scale(1.12) rotate(-8deg); }
+      40% { transform: scale(1.15) rotate(8deg); }
+      60% { transform: scale(1.18) rotate(-6deg); }
+      80% { transform: scale(1.22) rotate(6deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    @keyframes liquid {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.6)); }
+      50% { filter: drop-shadow(0 0 32px rgba(255, 184, 0, 0.95)); }
+    }
+
+    @keyframes floatUpFade {
+      0% { opacity: 1; transform: translateY(0) scale(0.9); }
+      100% { opacity: 0; transform: translateY(-45px) scale(1.15); }
+    }
+
+    .animate-float-1 { animation: float 3.5s ease-in-out infinite; }
+    .animate-float-2 { animation: float 4s ease-in-out infinite 0.5s; }
+    .animate-float-3 { animation: float 4.5s ease-in-out infinite 1s; }
+
+    .chest-card:hover .chest-icon-wrapper {
+      animation: shake 0.45s ease-in-out infinite;
+    }
+
+    .chest-opening {
+      animation: chestOpenShake 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards !important;
+      box-shadow: 0 0 60px 25px rgba(255, 184, 0, 0.85) !important;
+    }
+
+    .liquid-bar {
+      background: linear-gradient(270deg, #00F0FF, #6366F1, #FFB800, #00F0FF);
+      background-size: 300% 300%;
+      animation: liquid 4s ease infinite;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+    }
+
+    .winner-item {
+      animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .multiplier-glow {
+      animation: pulseGlow 2s infinite;
+    }
+
+    .floating-prize {
+      animation: floatUpFade 1.3s ease-out forwards;
+    }
+
+    /* Glassmorphism & Borders */
+    .cyber-panel {
+      background: rgba(18, 14, 36, 0.78);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(99, 102, 241, 0.28);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.55);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 md:p-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-950/50 via-[#090712] to-[#090712]">
+
+  <!-- TOP NAVIGATION & VIP LOYALTY BAR -->
+  <header class="cyber-panel rounded-2xl p-4 mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-vault-purple/40 relative z-20">
+    <!-- Brand Logo -->
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-vault-purple to-vault-cyan flex items-center justify-center shadow-[0_0_20px_rgba(0,240,255,0.4)]">
+        <i data-lucide="zap" class="w-7 h-7 text-vault-bg fill-current"></i>
+      </div>
+      <div>
+        <h1 class="font-display text-2xl font-black tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-vault-cyan via-white to-vault-gold">
+          NEON<span class="text-vault-gold">VAULT</span>
+        </h1>
+        <p class="text-xs text-gray-400 tracking-widest uppercase">VIP Loyalty & Multiplier Arena</p>
+      </div>
+    </div>
+
+    <!-- Animated Circular VIP Level Ring & Liquid XP Progress Bar -->
+    <div class="flex items-center gap-5 flex-1 max-w-xl mx-auto bg-black/45 p-3 rounded-xl border border-white/10">
+      <div class="relative w-16 h-16 flex items-center justify-center shrink-0">
+        <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+          <path class="text-gray-800" stroke-width="3.2" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          <path id="vip-ring" class="text-vault-gold transition-all duration-700 ease-out" stroke-dasharray="75, 100" stroke-width="3.2" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" style="filter: drop-shadow(0 0 6px #FFB800);" />
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center">
+          <span class="text-[10px] text-gray-400 uppercase font-bold">VIP</span>
+          <span id="vip-level" class="font-display text-lg font-black text-vault-gold leading-none">42</span>
+        </div>
+      </div>
+
+      <div class="flex-1">
+        <div class="flex justify-between items-center text-sm mb-1.5 font-semibold">
+          <span class="text-vault-cyan flex items-center gap-1.5">
+            <i data-lucide="crown" class="w-4 h-4 text-vault-gold"></i>
+            <span id="vip-tier-name">Cyber Whale Tier</span>
+          </span>
+          <span id="xp-text" class="text-gray-300 font-mono text-xs">750 / 1,000 XP</span>
+        </div>
+        <div class="w-full h-4 bg-gray-900 rounded-full overflow-hidden p-0.5 border border-white/10 relative">
+          <div id="xp-bar" class="h-full rounded-full liquid-bar transition-all duration-500" style="width: 75%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Wallet Balance -->
+    <div class="flex items-center gap-3">
+      <div id="wallet-box" class="bg-black/60 border border-vault-gold/40 rounded-xl px-4 py-2 flex items-center gap-3 shadow-[0_0_15px_rgba(255,184,0,0.15)] transition-transform duration-300">
+        <div class="w-9 h-9 rounded-lg bg-vault-gold/20 border border-vault-gold/40 flex items-center justify-center">
+          <i data-lucide="wallet" class="w-5 h-5 text-vault-gold"></i>
+        </div>
+        <div>
+          <div class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Vault Balance</div>
+          <div id="user-balance" class="font-display text-lg font-bold text-white">$14,250.00</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT GRID -->
+  <main class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1">
+    
+    <!-- LEFT & CENTER COLUMN: Arena + Quests + Loot Chests -->
+    <div class="lg:col-span-3 flex flex-col gap-6">
+      
+      <!-- 1. CENTRAL PLAYABLE MULTIPLIER ARENA -->
+      <div class="cyber-panel rounded-2xl p-6 relative overflow-hidden min-h-[410px] flex flex-col justify-between border border-vault-cyan/30">
+        <!-- Arena Header & Recent Multipliers -->
+        <div class="flex flex-wrap justify-between items-center gap-2 z-10">
+          <div class="flex items-center gap-2">
+            <span id="arena-live-dot" class="w-3 h-3 rounded-full bg-vault-cyan animate-ping"></span>
+            <span class="font-display text-sm tracking-wider uppercase text-vault-cyan font-bold">Live Multiplier Arena</span>
+          </div>
+          <div id="history-bar" class="flex gap-2 text-xs font-mono overflow-x-auto">
+            <span class="px-2.5 py-1 rounded bg-white/5 text-gray-400 border border-white/10">1.42x</span>
+            <span class="px-2.5 py-1 rounded bg-vault-purple/20 text-vault-purple border border-vault-purple/40">4.85x</span>
+            <span class="px-2.5 py-1 rounded bg-vault-gold/20 text-vault-gold border border-vault-gold/40">18.20x</span>
+            <span class="px-2.5 py-1 rounded bg-vault-cyan/20 text-vault-cyan border border-vault-cyan/40">2.15x</span>
+          </div>
+        </div>
+
+        <!-- Animated Curve & Rocket Canvas -->
+        <canvas id="arena-canvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+
+        <!-- Center Multiplier Readout & Win Banner -->
+        <div class="my-auto text-center z-10 pointer-events-none py-6">
+          <div id="arena-status" class="text-xs uppercase tracking-[0.3em] text-vault-cyan mb-2 font-bold">
+            Enter Wager & Click Launch Round
+          </div>
+          <div id="multiplier-display" class="font-display text-6xl md:text-8xl font-black text-white multiplier-glow tracking-tight transition-transform duration-150">
+            1.00x
+          </div>
+          <div id="round-feedback" class="h-7 mt-2 text-sm font-bold tracking-wider uppercase text-emerald-400 opacity-0 transition-opacity duration-300">
+            +$0.00 Profit • +250 VIP XP
+          </div>
+        </div>
+
+        <!-- Playable Betting & Launch / Cashout Controls -->
+        <div class="z-10 flex flex-wrap items-center justify-between gap-4 bg-black/70 p-4 rounded-xl border border-white/10 backdrop-blur-md">
+          <!-- Bet Input & Quick Buttons -->
+          <div class="flex flex-wrap items-center gap-3">
+            <div>
+              <label for="bet-input" class="block text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Bet Amount ($)</label>
+              <div class="flex items-center bg-vault-card rounded-xl border border-vault-purple/40 focus-within:border-vault-cyan px-3 py-1.5">
+                <span class="text-vault-gold font-display font-bold mr-1">$</span>
+                <input id="bet-input" type="number" min="1" step="10" value="100" class="bg-transparent text-white font-display font-bold text-base w-24 focus:outline-none" />
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 mt-4">
+              <button onclick="setBet(50)" class="px-3 py-2 rounded-lg bg-white/5 hover:bg-vault-purple/30 border border-white/10 text-xs font-bold text-gray-300 hover:text-white transition">$50</button>
+              <button onclick="setBet(100)" class="px-3 py-2 rounded-lg bg-white/5 hover:bg-vault-purple/30 border border-white/10 text-xs font-bold text-gray-300 hover:text-white transition">$100</button>
+              <button onclick="setBet(500)" class="px-3 py-2 rounded-lg bg-white/5 hover:bg-vault-purple/30 border border-white/10 text-xs font-bold text-gray-300 hover:text-white transition">$500</button>
+              <button onclick="multiplyBet(2)" class="px-3 py-2 rounded-lg bg-vault-purple/20 hover:bg-vault-purple/40 border border-vault-purple/40 text-xs font-bold text-vault-cyan transition">2X</button>
+            </div>
+          </div>
+
+          <!-- Main Action Button (Launch Round / Cash Out) -->
+          <div class="flex items-center gap-3 flex-1 sm:flex-initial justify-end">
+            <button id="action-btn" onclick="handleArenaAction()" class="w-full sm:w-auto min-w-[230px] px-8 py-3.5 rounded-xl font-display font-black text-sm uppercase tracking-wider bg-gradient-to-r from-vault-cyan via-vault-purple to-indigo-500 text-white shadow-[0_0_25px_rgba(0,240,255,0.45)] hover:scale-105 active:scale-95 transition-all">
+              Launch Round
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. WORKING DAILY QUESTS & VIP LEVEL-UP BAR -->
+      <div class="cyber-panel rounded-2xl p-5 border border-vault-purple/30">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <i data-lucide="Crosshair" class="w-5 h-5 text-vault-cyan"></i>
+            <h2 class="font-display text-base font-bold uppercase tracking-wider text-white">Live Daily VIP Quests</h2>
+          </div>
+          <span class="text-xs text-gray-400">Complete quests to trigger instant <span class="text-vault-gold font-bold">VIP Level-Up</span></span>
+        </div>
+
+        <div id="quests-container" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Quest cards populated & updated via JS -->
+        </div>
+      </div>
+
+      <!-- 3. THREE FLOATING VIP LOOT CHESTS -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Bronze Chest -->
+        <div onclick="openChest(this, 'Bronze', '#CD7F32', 100, 500)" class="chest-card cyber-panel rounded-2xl p-6 cursor-pointer relative group overflow-hidden border-t-2 border-t-amber-700/60 hover:border-amber-500 transition-all">
+          <div class="absolute -right-10 -top-10 w-32 h-32 bg-amber-700/20 rounded-full blur-2xl group-hover:bg-amber-600/40 transition-all"></div>
+          <div class="flex flex-col items-center text-center relative">
+            <div class="chest-icon-wrapper animate-float-1 w-20 h-20 rounded-2xl bg-gradient-to-b from-amber-700/30 to-black border border-amber-600/50 flex items-center justify-center mb-4 shadow-[0_0_25px_rgba(205,127,50,0.3)] transition-all">
+              <i data-lucide="package" class="w-10 h-10 text-amber-500"></i>
+            </div>
+            <h3 class="font-display text-lg font-bold text-amber-400">Bronze Vault</h3>
+            <p class="text-xs text-gray-400 mt-1 mb-4">Instant Bonus: <span class="text-white font-bold">$100 – $500</span> + XP</p>
+            <span class="chest-btn-label px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40 group-hover:bg-amber-500 group-hover:text-black transition-all">
+              Click to Open
+            </span>
+          </div>
+        </div>
+
+        <!-- Emerald Chest -->
+        <div onclick="openChest(this, 'Emerald', '#10B981', 500, 2500)" class="chest-card cyber-panel rounded-2xl p-6 cursor-pointer relative group overflow-hidden border-t-2 border-t-emerald-500/60 hover:border-emerald-400 transition-all">
+          <div class="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/20 rounded-full blur-2xl group-hover:bg-emerald-400/40 transition-all"></div>
+          <div class="flex flex-col items-center text-center relative">
+            <div class="chest-icon-wrapper animate-float-2 w-20 h-20 rounded-2xl bg-gradient-to-b from-emerald-600/30 to-black border border-emerald-400/50 flex items-center justify-center mb-4 shadow-[0_0_25px_rgba(16,185,129,0.4)] transition-all">
+              <i data-lucide="gem" class="w-10 h-10 text-emerald-400"></i>
+            </div>
+            <h3 class="font-display text-lg font-bold text-emerald-400">Emerald Vault</h3>
+            <p class="text-xs text-gray-400 mt-1 mb-4">Instant Bonus: <span class="text-white font-bold">$500 – $2,500</span> + XP</p>
+            <span class="chest-btn-label px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 group-hover:bg-emerald-400 group-hover:text-black transition-all">
+              Click to Open
+            </span>
+          </div>
+        </div>
+
+        <!-- Obsidian Chest -->
+        <div onclick="openChest(this, 'Obsidian', '#00F0FF', 2500, 10000)" class="chest-card cyber-panel rounded-2xl p-6 cursor-pointer relative group overflow-hidden border-t-2 border-t-vault-purple/80 hover:border-vault-cyan transition-all">
+          <div class="absolute -right-10 -top-10 w-32 h-32 bg-vault-purple/30 rounded-full blur-2xl group-hover:bg-vault-cyan/40 transition-all"></div>
+          <div class="flex flex-col items-center text-center relative">
+            <div class="chest-icon-wrapper animate-float-3 w-20 h-20 rounded-2xl bg-gradient-to-b from-indigo-600/40 to-black border border-vault-cyan/60 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(0,240,255,0.4)] transition-all">
+              <i data-lucide="shield-alert" class="w-10 h-10 text-vault-cyan"></i>
+            </div>
+            <h3 class="font-display text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-vault-purple to-vault-cyan">Obsidian Vault</h3>
+            <p class="text-xs text-gray-400 mt-1 mb-4">Instant Bonus: <span class="text-white font-bold">$2,500 – $10,000</span></p>
+            <span class="chest-btn-label px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-vault-purple/30 text-vault-cyan border border-vault-cyan/40 group-hover:bg-vault-cyan group-hover:text-black transition-all">
+              Click to Open
+            </span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR: LIVE WINNERS FEED -->
+    <aside class="cyber-panel rounded-2xl p-5 flex flex-col h-full border border-vault-purple/30">
+      <div class="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
+        <div class="flex items-center gap-2">
+          <i data-lucide="trophy" class="w-5 h-5 text-vault-gold"></i>
+          <h2 class="font-display text-base font-bold tracking-wider uppercase text-white">Live Drops</h2>
+        </div>
+        <span class="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse">Real-Time</span>
+      </div>
+
+      <!-- Winners List Container -->
+      <div id="winners-list" class="flex-1 flex flex-col gap-3 overflow-hidden">
+        <!-- Populated dynamically via JS -->
+      </div>
+
+      <!-- Chest & Cashout Toast Notification -->
+      <div id="reward-toast" class="mt-4 p-3.5 rounded-xl bg-gradient-to-r from-vault-purple/30 via-indigo-900/40 to-vault-cyan/30 border border-vault-cyan/50 text-center hidden transition-all">
+        <p id="reward-title" class="text-[11px] text-vault-cyan uppercase font-bold tracking-wider">Vault Reward Added!</p>
+        <p id="reward-amount" class="font-display text-lg font-black text-vault-gold">+$1,200.00</p>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- VIP LEVEL-UP GLOWING CELEBRATION MODAL -->
+  <div id="levelup-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="cyber-panel max-w-md w-full rounded-3xl p-8 text-center border-2 border-vault-gold shadow-[0_0_80px_rgba(255,184,0,0.45)] relative overflow-hidden animate-bounce" style="animation-iteration-count: 1; animation-duration: 0.5s;">
+      <div class="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-vault-gold/25 rounded-full blur-3xl pointer-events-none"></div>
+      
+      <div class="w-24 h-24 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-vault-gold via-amber-500 to-yellow-600 p-0.5 shadow-[0_0_35px_rgba(255,184,0,0.8)]">
+        <div class="w-full h-full bg-[#090712] rounded-2xl flex flex-col items-center justify-center">
+          <span class="text-[10px] uppercase tracking-widest text-vault-cyan font-bold">VIP LEVEL</span>
+          <span id="modal-new-level" class="font-display text-4xl font-black text-vault-gold">43</span>
+        </div>
+      </div>
+
+      <h2 class="font-display text-2xl font-black uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-vault-gold via-white to-vault-cyan">
+        VIP Rank Ascended!
+      </h2>
+      <p id="modal-desc" class="text-sm text-gray-300 mt-2 mb-6">
+        Quest completed! Your VIP Ring has leveled up and your instant loyalty bonus has been credited to your Vault Balance.
+      </p>
+
+      <div class="bg-black/60 border border-vault-gold/40 rounded-2xl p-4 mb-6 flex items-center justify-around">
+        <div>
+          <div class="text-[10px] uppercase text-gray-400 font-bold">Cash Bonus</div>
+          <div id="modal-cash-reward" class="font-display text-xl font-black text-vault-gold">+$500.00</div>
+        </div>
+        <div class="h-8 w-px bg-white/10"></div>
+        <div>
+          <div class="text-[10px] uppercase text-gray-400 font-bold">VIP Status</div>
+          <div class="font-display text-xl font-black text-vault-cyan">MAX BOOST</div>
+        </div>
+      </div>
+
+      <button onclick="closeLevelUpModal()" class="w-full py-3.5 rounded-xl font-display font-black uppercase tracking-wider text-sm bg-gradient-to-r from-vault-gold to-amber-500 text-black shadow-[0_0_25px_rgba(255,184,0,0.6)] hover:scale-105 transition-transform">
+        Collect & Continue
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // ==========================================
+    // STATE MANAGEMENT: WALLET, VIP XP & QUESTS
+    // ==========================================
+    let balance = 14250.00;
+    let vipLevel = 42;
+    let currentXP = 750;
+    const maxXP = 1000;
+
+    // 3 Live Interactive Quests
+    const quests = [
+      {
+        id: 'play_rounds',
+        title: 'Play 2 Rounds',
+        desc: 'Launch 2 rounds in the Multiplier Arena',
+        progress: 0,
+        target: 2,
+        rewardCash: 300,
+        claimed: false
+      },
+      {
+        id: 'cashout_2x',
+        title: 'Cash Out Above 2.00x',
+        desc: 'Lock in a multiplier of 2.00x or higher',
+        progress: 0,
+        target: 1,
+        rewardCash: 600,
+        claimed: false
+      },
+      {
+        id: 'open_chest',
+        title: 'Open 1 Loot Chest',
+        desc: 'Unlock any Bronze, Emerald, or Obsidian chest',
+        progress: 0,
+        target: 1,
+        rewardCash: 450,
+        claimed: false
+      }
+    ];
+
+    function updateWalletUI(amountDelta = 0) {
+      balance = Math.max(0, balance + amountDelta);
+      const balEl = document.getElementById('user-balance');
+      balEl.textContent = '$' + balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      if (amountDelta > 0) {
+        const box = document.getElementById('wallet-box');
+        box.classList.add('scale-105', 'border-vault-cyan');
+        setTimeout(() => box.classList.remove('scale-105', 'border-vault-cyan'), 300);
+      }
+    }
+
+    function addVipXP(amount, forceLevelUpCash = 0) {
+      currentXP += amount;
+      let leveledUp = false;
+
+      while (currentXP >= maxXP) {
+        currentXP -= maxXP;
+        vipLevel++;
+        leveledUp = true;
+      }
+
+      const xpPercent = Math.min(100, Math.round((currentXP / maxXP) * 100));
+      document.getElementById('xp-bar').style.width = xpPercent + '%';
+      document.getElementById('xp-text').textContent = `${currentXP.toLocaleString()} / ${maxXP.toLocaleString()} XP`;
+      document.getElementById('vip-ring').setAttribute('stroke-dasharray', `${xpPercent}, 100`);
+      document.getElementById('vip-level').textContent = vipLevel;
+
+      if (leveledUp) {
+        showLevelUpModal(forceLevelUpCash || 250);
+      }
+    }
+
+    // ==========================================
+    // 1. PLAYABLE MULTIPLIER ARENA ENGINE
+    // ==========================================
+    const canvas = document.getElementById('arena-canvas');
+    const ctx = canvas.getContext('2d');
+    const multDisplay = document.getElementById('multiplier-display');
+    const statusDisplay = document.getElementById('arena-status');
+    const feedbackDisplay = document.getElementById('round-feedback');
+    const actionBtn = document.getElementById('action-btn');
+    const betInput = document.getElementById('bet-input');
+
+    // Game States: 'IDLE' | 'RUNNING' | 'CASHED_OUT' | 'CRASHED'
+    let arenaState = 'IDLE';
+    let currentMultiplier = 1.00;
+    let crashPoint = 2.50;
+    let activeBet = 100;
+    let curveProgress = 0;
+
+    function resizeCanvas() {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function setBet(amount) {
+      if (arenaState === 'RUNNING') return;
+      betInput.value = amount;
+    }
+
+    function multiplyBet(factor) {
+      if (arenaState === 'RUNNING') return;
+      const cur = parseFloat(betInput.value) || 50;
+      betInput.value = Math.min(Math.floor(balance), Math.max(10, Math.round(cur * factor)));
+    }
+
+    function handleArenaAction() {
+      if (arenaState === 'IDLE' || arenaState === 'CRASHED' || arenaState === 'CASHED_OUT') {
+        launchRound();
+      } else if (arenaState === 'RUNNING') {
+        cashOutRound();
+      }
+    }
+
+    function launchRound() {
+      const wager = parseFloat(betInput.value);
+      if (isNaN(wager) || wager <= 0) {
+        alert('Please enter a valid positive bet amount.');
+        return;
+      }
+      if (wager > balance) {
+        // Helpful auto-topup if user bets more than balance
+        updateWalletUI(1000);
+        showToast('Free VIP Reload Added!', '+$1,000.00');
+      }
+
+      activeBet = wager;
+      updateWalletUI(-activeBet);
+
+      // Generate thrilling crash point (weighted so player has fun opportunities above 2.00x)
+      const roll = Math.random();
+      if (roll < 0.20) {
+        crashPoint = +(1.15 + Math.random() * 0.75).toFixed(2); // 1.15x - 1.90x
+      } else if (roll < 0.75) {
+        crashPoint = +(2.10 + Math.random() * 3.80).toFixed(2); // 2.10x - 5.90x
+      } else {
+        crashPoint = +(6.00 + Math.random() * 14.00).toFixed(2); // 6.00x - 20.00x
+      }
+
+      currentMultiplier = 1.00;
+      curveProgress = 0;
+      arenaState = 'RUNNING';
+      betInput.disabled = true;
+
+      // Update Quest #1: Play 2 rounds
+      incrementQuest('play_rounds', 1);
+
+      // UI styling for active round
+      multDisplay.className = 'font-display text-6xl md:text-8xl font-black text-white multiplier-glow tracking-tight';
+      statusDisplay.textContent = 'Rocket Ascending • Cash Out Anytime!';
+      statusDisplay.className = 'text-xs uppercase tracking-[0.3em] text-vault-cyan mb-2 font-bold';
+      feedbackDisplay.style.opacity = '0';
+
+      updateActionButton();
+    }
+
+    function cashOutRound() {
+      if (arenaState !== 'RUNNING') return;
+      arenaState = 'CASHED_OUT';
+      betInput.disabled = false;
+
+      const lockedMultiplier = currentMultiplier;
+      const totalPayout = +(activeBet * lockedMultiplier).toFixed(2);
+      const profit = +(totalPayout - activeBet).toFixed(2);
+
+      // Credit total payout to wallet & grant +250 VIP XP
+      updateWalletUI(totalPayout);
+      addVipXP(250);
+
+      // Check Quest #2: Cash out above 2.00x
+      if (lockedMultiplier >= 2.00) {
+        incrementQuest('cashout_2x', 1);
+      }
+
+      // Celebratory Confetti Burst
+      confetti({
+        particleCount: 80,
+        spread: 75,
+        origin: { y: 0.55 },
+        colors: ['#FFB800', '#00F0FF', '#10B981']
+      });
+
+      // Arena Win UI
+      multDisplay.textContent = lockedMultiplier.toFixed(2) + 'x';
+      multDisplay.className = 'font-display text-6xl md:text-8xl font-black text-vault-gold multiplier-glow tracking-tight scale-105';
+      statusDisplay.textContent = `Cashed Out Successfully @ ${lockedMultiplier.toFixed(2)}x!`;
+      statusDisplay.className = 'text-xs uppercase tracking-[0.3em] text-emerald-400 mb-2 font-bold';
+
+      feedbackDisplay.textContent = `+$${totalPayout.toLocaleString('en-US', {minimumFractionDigits: 2})} Payout (+$${profit.toLocaleString('en-US', {minimumFractionDigits: 2})} Profit) • +250 VIP XP`;
+      feedbackDisplay.className = 'h-7 mt-2 text-sm font-bold tracking-wider uppercase text-vault-gold opacity-100 transition-opacity duration-300';
+
+      addHistoryBadge(lockedMultiplier.toFixed(2) + 'x', true);
+      addWinnerItem('You (VIP)', totalPayout.toFixed(2), lockedMultiplier.toFixed(2) + 'x', true);
+      showToast(`Cashed Out @ ${lockedMultiplier.toFixed(2)}x!`, `+$${totalPayout.toLocaleString('en-US', {minimumFractionDigits: 2})}`);
+
+      updateActionButton();
+    }
+
+    function crashRound() {
+      arenaState = 'CRASHED';
+      betInput.disabled = false;
+
+      multDisplay.textContent = crashPoint.toFixed(2) + 'x';
+      multDisplay.className = 'font-display text-6xl md:text-8xl font-black text-rose-500 tracking-tight';
+      statusDisplay.textContent = `Vault Burst @ ${crashPoint.toFixed(2)}x`;
+      statusDisplay.className = 'text-xs uppercase tracking-[0.3em] text-rose-500 mb-2 font-bold';
+
+      feedbackDisplay.textContent = `Round Crashed • Try Again!`;
+      feedbackDisplay.className = 'h-7 mt-2 text-sm font-bold tracking-wider uppercase text-rose-400 opacity-100 transition-opacity duration-300';
+
+      addHistoryBadge(crashPoint.toFixed(2) + 'x', false);
+      updateActionButton();
+    }
+
+    function updateActionButton() {
+      if (arenaState === 'RUNNING') {
+        const livePayout = (activeBet * currentMultiplier).toFixed(2);
+        actionBtn.textContent = `Cash Out ($${Number(livePayout).toLocaleString('en-US', {minimumFractionDigits: 2})})`;
+        actionBtn.className = 'w-full sm:w-auto min-w-[230px] px-8 py-3.5 rounded-xl font-display font-black text-sm uppercase tracking-wider bg-gradient-to-r from-vault-gold via-amber-400 to-yellow-500 text-black shadow-[0_0_30px_rgba(255,184,0,0.75)] hover:scale-105 active:scale-95 transition-all';
+      } else {
+        actionBtn.textContent = 'Launch Round';
+        actionBtn.className = 'w-full sm:w-auto min-w-[230px] px-8 py-3.5 rounded-xl font-display font-black text-sm uppercase tracking-wider bg-gradient-to-r from-vault-cyan via-vault-purple to-indigo-500 text-white shadow-[0_0_25px_rgba(0,240,255,0.45)] hover:scale-105 active:scale-95 transition-all';
+      }
+    }
+
+    function addHistoryBadge(multText, isWin) {
+      const bar = document.getElementById('history-bar');
+      const badge = document.createElement('span');
+      badge.className = isWin
+        ? 'px-2.5 py-1 rounded bg-vault-gold/20 text-vault-gold border border-vault-gold/50 font-bold'
+        : 'px-2.5 py-1 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40';
+      badge.textContent = multText;
+      bar.prepend(badge);
+      if (bar.children.length > 6) {
+        bar.removeChild(bar.lastElementChild);
+      }
+    }
+
+    // Canvas Animation Loop
+    function renderArenaLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Subtle Cyber Grid Background
+      ctx.strokeStyle = 'rgba(99, 102, 241, 0.08)';
+      ctx.lineWidth = 1;
+      for (let x = 40; x < canvas.width; x += 60) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = 40; y < canvas.height; y += 50) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+
+      if (arenaState === 'RUNNING') {
+        curveProgress += 0.0028;
+        currentMultiplier += 0.008 * (1 + currentMultiplier * 0.22);
+        multDisplay.textContent = currentMultiplier.toFixed(2) + 'x';
+        updateActionButton();
+
+        if (currentMultiplier >= crashPoint) {
+          crashRound();
+        }
+      }
+
+      // Draw Curve & Rocket when not IDLE
+      const displayProg = arenaState === 'IDLE' ? 0.15 : Math.min(curveProgress, 1);
+      const startX = 40;
+      const startY = canvas.height - 85;
+      const endX = startX + (canvas.width - 100) * displayProg;
+      const endY = startY - Math.pow(displayProg, 1.65) * (canvas.height - 165);
+
+      const strokeColor = arenaState === 'CRASHED'
+        ? '#F43F5E'
+        : arenaState === 'CASHED_OUT'
+          ? '#FFB800'
+          : '#00F0FF';
+
+      const fillGrad = ctx.createLinearGradient(0, Math.max(40, endY), 0, startY);
+      fillGrad.addColorStop(0, arenaState === 'CRASHED' ? 'rgba(244, 63, 94, 0.35)' : arenaState === 'CASHED_OUT' ? 'rgba(255, 184, 0, 0.35)' : 'rgba(0, 240, 255, 0.28)');
+      fillGrad.addColorStop(1, 'rgba(9, 7, 18, 0.0)');
+
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.quadraticCurveTo(startX + (endX - startX) * 0.6, startY, endX, Math.max(45, endY));
+      ctx.lineTo(endX, startY);
+      ctx.closePath();
+      ctx.fillStyle = fillGrad;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.quadraticCurveTo(startX + (endX - startX) * 0.6, startY, endX, Math.max(45, endY));
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 4;
+      ctx.shadowColor = strokeColor;
+      ctx.shadowBlur = 16;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Glowing Rocket Tip Orb
+      ctx.beginPath();
+      ctx.arc(endX, Math.max(45, endY), 8, 0, Math.PI * 2);
+      ctx.fillStyle = arenaState === 'CRASHED' ? '#F43F5E' : '#FFB800';
+      ctx.shadowColor = '#FFB800';
+      ctx.shadowBlur = 22;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      requestAnimationFrame(renderArenaLoop);
+    }
+    renderArenaLoop();
+
+    // ==========================================
+    // 2. WORKING DAILY QUESTS & VIP LEVEL-UP
+    // ==========================================
+    function renderQuests() {
+      const container = document.getElementById('quests-container');
+      container.innerHTML = '';
+
+      quests.forEach((q) => {
+        const pct = Math.min(100, Math.round((q.progress / q.target) * 100));
+        const isComplete = q.progress >= q.target;
+
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-xl border transition-all flex flex-col justify-between ${
+          q.claimed
+            ? 'bg-black/30 border-emerald-500/30 opacity-75'
+            : isComplete
+              ? 'bg-gradient-to-br from-vault-purple/25 to-vault-gold/15 border-vault-gold shadow-[0_0_20px_rgba(255,184,0,0.2)]'
+              : 'bg-black/45 border-white/10'
+        }`;
+
+        let actionHTML = '';
+        if (q.claimed) {
+          actionHTML = `
+            <span class="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-display font-bold uppercase text-center">
+              ✓ Reward Claimed
+            </span>
+          `;
+        } else if (isComplete) {
+          actionHTML = `
+            <button onclick="claimQuest('${q.id}')" class="w-full py-2 rounded-lg font-display font-black text-xs uppercase tracking-wider bg-gradient-to-r from-vault-gold to-amber-500 text-black shadow-[0_0_20px_rgba(255,184,0,0.6)] animate-pulse hover:scale-105 transition-transform">
+              Claim Reward (+$${q.rewardCash} & Level Up)
+            </button>
+          `;
+        } else {
+          actionHTML = `
+            <div class="flex justify-between items-center text-[11px] text-gray-400 font-semibold">
+              <span>Reward: <strong class="text-vault-gold">+$${q.rewardCash}</strong> + VIP Level-Up</span>
+              <span class="font-mono text-vault-cyan">${q.progress} / ${q.target}</span>
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div>
+            <div class="flex justify-between items-start gap-2 mb-1">
+              <h3 class="font-display text-sm font-bold text-white">${q.title}</h3>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-vault-purple/20 text-vault-cyan border border-vault-purple/40 font-bold">+1,000 XP</span>
+            </div>
+            <p class="text-xs text-gray-400 mb-3">${q.desc}</p>
+            <div class="w-full h-2.5 bg-gray-900 rounded-full overflow-hidden mb-3 border border-white/10">
+              <div class="h-full liquid-bar transition-all duration-500" style="width: ${pct}%"></div>
+            </div>
+          </div>
+          ${actionHTML}
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function incrementQuest(questId, amount = 1) {
+      const q = quests.find(item => item.id === questId);
+      if (!q || q.claimed) return;
+      if (q.progress < q.target) {
+        q.progress = Math.min(q.target, q.progress + amount);
+        renderQuests();
+      }
+    }
+
+    function claimQuest(questId) {
+      const q = quests.find(item => item.id === questId);
+      if (!q || q.claimed || q.progress < q.target) return;
+
+      q.claimed = true;
+      updateWalletUI(q.rewardCash);
+      renderQuests();
+
+      // Grant 1,000 XP which guarantees a full VIP Level-Up and opens the celebration popup
+      addVipXP(1000, q.rewardCash);
+    }
+
+    function showLevelUpModal(cashBonus) {
+      const modal = document.getElementById('levelup-modal');
+      document.getElementById('modal-new-level').textContent = vipLevel;
+      document.getElementById('modal-cash-reward').textContent = `+$${cashBonus.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      // Dual Fireworks Confetti Celebration
+      confetti({
+        particleCount: 110,
+        spread: 100,
+        origin: { y: 0.45 },
+        colors: ['#FFB800', '#00F0FF', '#6366F1', '#10B981']
+      });
+    }
+
+    function closeLevelUpModal() {
+      const modal = document.getElementById('levelup-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // Initial render of Daily Quests
+    renderQuests();
+
+    // ==========================================
+    // 3. WORKING LOOT CHESTS
+    // ==========================================
+    function openChest(element, tier, colorHex, minPrize, maxPrize) {
+      const iconWrapper = element.querySelector('.chest-icon-wrapper');
+      const btnLabel = element.querySelector('.chest-btn-label');
+
+      // Trigger shake-open & glow burst animation
+      iconWrapper.classList.add('chest-opening');
+      setTimeout(() => iconWrapper.classList.remove('chest-opening'), 600);
+
+      // Calculate random instant bonus prize
+      const prize = Math.floor(minPrize + Math.random() * (maxPrize - minPrize));
+
+      // Confetti burst from the clicked chest's coordinates
+      const rect = element.getBoundingClientRect();
+      const x = (rect.left + rect.width / 2) / window.innerWidth;
+      const y = (rect.top + rect.height / 2) / window.innerHeight;
+
+      confetti({
+        particleCount: 75,
+        spread: 85,
+        origin: { x, y },
+        colors: [colorHex, '#FFB800', '#ffffff']
+      });
+
+      // Floating "+$Prize" badge directly over the chest
+      const floatEl = document.createElement('div');
+      floatEl.className = 'floating-prize absolute top-6 left-1/2 -translate-x-1/2 font-display text-xl font-black text-vault-gold pointer-events-none z-30 drop-shadow-[0_0_10px_rgba(255,184,0,0.9)]';
+      floatEl.textContent = `+$${prize.toLocaleString()}`;
+      element.appendChild(floatEl);
+      setTimeout(() => floatEl.remove(), 1300);
+
+      // Update button label briefly
+      const originalText = btnLabel.textContent;
+      btnLabel.textContent = `Won +$${prize.toLocaleString()}!`;
+      setTimeout(() => { btnLabel.textContent = originalText; }, 2000);
+
+      // Credit Wallet, Add XP, Progress Quest #3 ("Open 1 Loot Chest")
+      updateWalletUI(prize);
+      addVipXP(150);
+      incrementQuest('open_chest', 1);
+
+      // Show Toast & Live Feed Item
+      showToast(`${tier} Vault Unlocked!`, `+$${prize.toLocaleString()}.00`);
+      addWinnerItem(`You (${tier})`, prize.toFixed(2), 'LOOT CHEST', true);
+    }
+
+    function showToast(title, amountText) {
+      const toast = document.getElementById('reward-toast');
+      document.getElementById('reward-title').textContent = title;
+      document.getElementById('reward-amount').textContent = amountText;
+      toast.classList.remove('hidden');
+    }
+
+    // ==========================================
+    // 4. LIVE WINNERS SIDEBAR FEED
+    // ==========================================
+    const winnersList = document.getElementById('winners-list');
+    const mockUsers = ['CyberSamurai', 'NeonWhale99', 'VortexKing', 'LunarEclipse', 'CryptoValkyrie', 'ZeroGravity', 'SynthRunner', 'ShadowBlade'];
+    const mockMultipliers = ['2.45x', '14.20x', '5.10x', '8.90x', '3.15x', '22.50x', '1.95x'];
+
+    function addWinnerItem(username, amount, mult, isHighlight = false) {
+      const item = document.createElement('div');
+      item.className = `winner-item p-3 rounded-xl border flex items-center justify-between ${
+        isHighlight 
+          ? 'bg-vault-gold/15 border-vault-gold/50 shadow-[0_0_15px_rgba(255,184,0,0.2)]' 
+          : 'bg-black/40 border-white/5'
+      }`;
+
+      item.innerHTML = `
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-vault-purple to-vault-cyan flex items-center justify-center font-display text-xs font-bold text-black">
+            ${username.substring(0, 2).toUpperCase()}
+          </div>
+          <div>
+            <div class="text-sm font-bold text-white leading-tight">${username}</div>
+            <div class="text-[11px] text-vault-cyan font-semibold">${mult}</div>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="font-display text-sm font-bold text-vault-gold">+$${Number(amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+          <div class="text-[10px] text-gray-500">Just now</div>
+        </div>
+      `;
+
+      winnersList.prepend(item);
+
+      if (winnersList.children.length > 7) {
+        winnersList.removeChild(winnersList.lastElementChild);
+      }
+    }
+
+    // Populate Initial Winners
+    for (let i = 0; i < 6; i++) {
+      const u = mockUsers[Math.floor(Math.random() * mockUsers.length)];
+      const m = mockMultipliers[Math.floor(Math.random() * mockMultipliers.length)];
+      const a = (Math.random() * 900 + 50).toFixed(2);
+      addWinnerItem(u, a, m);
+    }
+
+    // Slide in new live payouts every few seconds
+    setInterval(() => {
+      const u = mockUsers[Math.floor(Math.random() * mockUsers.length)];
+      const m = mockMultipliers[Math.floor(Math.random() * mockMultipliers.length)];
+      const a = (Math.random() * 1800 + 80).toFixed(2);
+      addWinnerItem(u, a, m);
+    }, 3200);
+  </script>
+</body>
+</html>
